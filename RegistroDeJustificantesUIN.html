@@ -1,0 +1,957 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Justificantes - UIN Insurgentes Campus Ecatepec</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @media print {
+            body * { visibility: hidden; }
+            #printableReport, #printableReport * { visibility: visible; }
+            #printableReport { position: absolute; left: 0; top: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Modal de Alerta / Mensajes Personalizado -->
+    <div id="customModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-slate-100 transform transition-all scale-95 opacity-0" id="modalContainer">
+            <div class="flex items-center space-x-3 mb-4">
+                <div id="modalIcon" class="w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold">
+                    <i class="fa-solid fa-info"></i>
+                </div>
+                <div>
+                    <h3 id="modalTitle" class="text-lg font-bold text-slate-900">Aviso del Sistema</h3>
+                    <p class="text-xs text-slate-500">UIN Insurgentes Campus Ecatepec</p>
+                </div>
+            </div>
+            <p id="modalMessage" class="text-slate-600 text-sm mb-6 leading-relaxed">Mensaje del sistema...</p>
+            <div class="flex justify-end">
+                <button onclick="closeModal()" class="bg-blue-700 hover:bg-blue-800 text-white font-medium px-5 py-2.5 rounded-xl text-sm transition shadow-md shadow-blue-700/20">
+                    Entendido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DE PANTALLAS -->
+    <div class="flex-grow flex flex-col">
+        
+        <!-- ================= PANTALLA 1: LOGIN ================= -->
+        <div id="loginScreen" class="flex-grow flex items-center justify-center p-4 bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900">
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden max-w-md w-full border border-blue-100/20">
+                <!-- Encabezado Login con Logo -->
+                <div class="bg-blue-950 p-6 text-center relative">
+                    <div class="absolute top-2 right-3 text-blue-400 text-xs font-semibold tracking-wider uppercase">Campus Ecatepec</div>
+                    <div class="bg-white p-3 rounded-2xl inline-block shadow-md mb-2">
+                        <!-- Logo oficial UIN -->
+                        <div class="text-blue-700 font-extrabold text-2xl tracking-tighter flex items-center justify-center gap-2">
+                            <span>UIN</span>
+                            <span class="text-xs font-semibold text-slate-600 border-l pl-2 text-left leading-tight">UNIVERSIDAD<br>INSURGENTES</span>
+                        </div>
+                    </div>
+                    <h1 class="text-white text-xl font-bold tracking-tight">Sistema de Justificantes</h1>
+                    <p class="text-blue-200 text-xs mt-1">Control Escolar y Asistencias</p>
+                </div>
+
+                <!-- Formulario de Acceso -->
+                <div class="p-8">
+                    <form onsubmit="handleLogin(event)" class="space-y-5">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Seleccione su Rol</label>
+                            <div class="relative">
+                                <select id="loginRole" onchange="updateLoginHints()" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm font-medium transition">
+                                    <option value="alumnado">Alumnado</option>
+                                    <option value="coordinacion">Coordinación</option>
+                                    <option value="directivos">Directivos</option>
+                                </select>
+                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                                    <i class="fa-solid fa-chevron-down text-xs"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Usuario / Matrícula / Correo</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                                    <i class="fa-solid fa-user"></i>
+                                </span>
+                                <input type="text" id="loginUser" required value="" placeholder="Ej. 1135777" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm transition">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-2">Contraseña</label>
+                            <div class="relative">
+                                <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
+                                    <i class="fa-solid fa-lock"></i>
+                                </span>
+                                <input type="password" id="loginPass" required value="" placeholder="••••••••" class="w-full bg-slate-50 border border-slate-200 text-slate-800 rounded-xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-sm transition">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3.5 rounded-xl shadow-lg shadow-blue-700/30 transition text-sm flex items-center justify-center space-x-2">
+                            <span>Iniciar Sesión</span>
+                            <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                        </button>
+                    </form>
+
+                    <!-- Credenciales de prueba orientativas -->
+                    <div class="mt-6 pt-4 border-t border-slate-100 text-center">
+                        <p class="text-xs text-slate-400" id="loginHint">Sugerencia: Ingrese Matrícula de Alumno (Ej. 1135777)</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= PANTALLAS DE INTERFAZ (OCULTAS POR DEFECTO) ================= -->
+
+        <!-- NAVBAR SUPERIOR COMÚN PARA ROLES -->
+        <header id="mainHeader" class="bg-white border-b border-slate-200 shadow-sm hidden sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                <!-- Logo e Institución -->
+                <div class="flex items-center space-x-4">
+                    <div class="text-blue-700 font-extrabold text-xl tracking-tighter flex items-center gap-1.5">
+                        <span>UIN</span>
+                        <span class="text-[10px] font-semibold text-slate-600 border-l pl-2 leading-tight">UNIVERSIDAD<br>INSURGENTES</span>
+                    </div>
+                    <div class="border-l border-slate-200 pl-4">
+                        <h2 class="text-sm font-bold text-slate-900">UIN Insurgentes</h2>
+                        <p class="text-xs text-blue-700 font-medium">Campus Ecatepec</p>
+                    </div>
+                </div>
+
+                <!-- Perfil y Salida -->
+                <div class="flex items-center space-x-4">
+                    <div class="text-right hidden sm:block">
+                        <p id="userNameDisplay" class="text-xs font-bold text-slate-800">Nombre de Usuario</p>
+                        <p id="userRoleBadge" class="text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider inline-block">Rol</p>
+                    </div>
+                    <button onclick="logout()" class="bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 p-2.5 rounded-xl transition text-sm flex items-center space-x-2" title="Cerrar Sesión">
+                        <i class="fa-solid fa-power-off"></i>
+                        <span class="hidden md:inline font-medium">Salir</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- ================= 2. INTERFAZ ALUMNADO ================= -->
+        <div id="alumnadoScreen" class="flex-grow hidden max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+            <!-- Bienvenida y Resumen rápido -->
+            <div class="bg-gradient-to-r from-blue-700 to-blue-900 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="bg-blue-600/60 text-blue-100 text-xs px-3 py-1 rounded-full font-medium">Portal de Alumnos</span>
+                    <h2 class="text-2xl font-bold mt-2">Bienvenido(a), <span id="alumnoNameHeader">Estudiante</span></h2>
+                    <p class="text-blue-100 text-sm mt-1">Gestiona tus justificantes escolares y revisa su estado en tiempo real.</p>
+                </div>
+                <button onclick="openNewJustificationModal()" class="bg-white text-blue-900 hover:bg-blue-50 font-bold px-5 py-3 rounded-2xl text-sm transition shadow-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-plus-circle text-blue-700"></i>
+                    <span>Solicitar Nuevo Justificante</span>
+                </button>
+            </div>
+
+            <!-- Listado de Justificantes del Alumno -->
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-lg">Mis Justificantes Registrados</h3>
+                        <p class="text-xs text-slate-500">Historial y estatus de solicitudes enviadas a coordinación</p>
+                    </div>
+                    <span id="alumnoCount" class="bg-slate-100 text-slate-700 text-xs px-3 py-1 rounded-full font-bold">0 Registros</span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                                <th class="p-4">Folio / Fecha</th>
+                                <th class="p-4">Materia / Docente</th>
+                                <th class="p-4">Motivo de Inasistencia</th>
+                                <th class="p-4">Comprobante</th>
+                                <th class="p-4 text-center">Estatus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="alumnoTableBody" class="divide-y divide-slate-100 text-sm">
+                            <!-- Inyectado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 3. INTERFAZ COORDINACIÓN ================= -->
+        <div id="coordinacionScreen" class="flex-grow hidden max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+            <!-- Pestañas de Navegación de Coordinación -->
+            <div class="flex flex-wrap gap-2 border-b border-slate-200 pb-4">
+                <button onclick="switchCoordTab('validar')" id="tabBtnValidar" class="coord-tab px-5 py-2.5 rounded-xl font-semibold text-sm transition bg-blue-700 text-white shadow-md shadow-blue-700/20">
+                    <i class="fa-solid fa-clipboard-check mr-2"></i>Validación y Registro
+                </button>
+                <button onclick="switchCoordTab('consulta')" id="tabBtnConsulta" class="coord-tab px-5 py-2.5 rounded-xl font-semibold text-sm transition bg-white text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-magnifying-glass mr-2"></i>Consulta y Motivos
+                </button>
+                <button onclick="switchCoordTab('estadisticas')" id="tabBtnEstadisticas" class="coord-tab px-5 py-2.5 rounded-xl font-semibold text-sm transition bg-white text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-chart-pie mr-2"></i>Porcentajes y Asistencias
+                </button>
+                <button onclick="switchCoordTab('reportes')" id="tabBtnReportes" class="coord-tab px-5 py-2.5 rounded-xl font-semibold text-sm transition bg-white text-slate-600 hover:bg-slate-100">
+                    <i class="fa-solid fa-file-arrow-down mr-2"></i>Reportes Básicos y Formato UIN
+                </button>
+            </div>
+
+            <!-- SECCIÓN A: Validación y Registro de Justificantes -->
+            <div id="coordSecValidar" class="coord-section space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Formulario para Registrar Directamente por Coordinación -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 lg:col-span-1 space-y-4">
+                        <h3 class="font-bold text-slate-900 text-lg flex items-center space-x-2">
+                            <i class="fa-solid fa-pen-to-square text-blue-700"></i>
+                            <span>Registro Manual (Coord.)</span>
+                        </h3>
+                        <p class="text-xs text-slate-500">Registra un justificante de alumno o por materia directamente en el sistema.</p>
+                        
+                        <form onsubmit="handleCoordManualRegister(event)" class="space-y-4 pt-2">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Seleccionar Alumno</label>
+                                <select id="coordSelectAlumno" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:bg-white">
+                                    <!-- Rellenado por JS -->
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Materia</label>
+                                <input type="text" id="coordMateria" required placeholder="Ej. Redes de Computadoras" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Fechas de Falta</label>
+                                <input type="text" id="coordFechas" required placeholder="Ej. del 22 al 24 de Octubre" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:bg-white">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Motivo / Razón</label>
+                                <select id="coordMotivo" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:bg-white">
+                                    <option value="Cita médica especializada y reposo">Cita médica especializada y reposo</option>
+                                    <option value="Cuestión familiar urgente">Cuestión familiar urgente</option>
+                                    <option value="Problemas de transporte / Fuerza mayor">Problemas de transporte / Fuerza mayor</option>
+                                    <option value="Trámite oficial / Laboral">Trámite oficial / Laboral</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 rounded-xl text-sm transition shadow-md shadow-blue-700/20">
+                                Registrar y Aprobar Justificante
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Cola de Solicitudes Pendientes de Alumnos -->
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 lg:col-span-2 space-y-4">
+                        <div class="flex justify-between items-center">
+                            <h3 class="font-bold text-slate-900 text-lg flex items-center space-x-2">
+                                <i class="fa-solid fa-list-check text-blue-700"></i>
+                                <span>Solicitudes Recibidas de Alumnos</span>
+                            </h3>
+                            <span id="pendingCountBadge" class="bg-amber-100 text-amber-800 text-xs px-3 py-1 rounded-full font-bold">0 Pendientes</span>
+                        </div>
+                        <div class="overflow-x-auto max-h-[500px] overflow-y-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="sticky top-0 bg-white shadow-sm">
+                                    <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                                        <th class="p-3">Matrícula / Alumno</th>
+                                        <th class="p-3">Materia / Fechas</th>
+                                        <th class="p-3">Motivo</th>
+                                        <th class="p-3 text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="coordValidarTableBody" class="divide-y divide-slate-100 text-sm">
+                                    <!-- Inyectado por JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN B: Consulta de Información y Buscador -->
+            <div id="coordSecConsulta" class="coord-section space-y-6 hidden">
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-lg">Consulta Detallada y Buscador Académico</h3>
+                            <p class="text-xs text-slate-500">Busca motivos de inasistencia, revisa expedientes y filtra por alumno o materia.</p>
+                        </div>
+                        <div class="w-full md:w-72 relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="fa-solid fa-search"></i>
+                            </span>
+                            <input type="text" id="searchAlumnoInput" onkeyup="filterConsultaTable()" placeholder="Buscar alumno, materia o motivo..." class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-600 focus:bg-white">
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                                    <th class="p-4">Matrícula</th>
+                                    <th class="p-4">Nombre del Alumno</th>
+                                    <th class="p-4">Correo Institucional</th>
+                                    <th class="p-4">Materia</th>
+                                    <th class="p-4">Motivo de Inasistencia</th>
+                                    <th class="p-4 text-center">Estatus</th>
+                                </tr>
+                            </thead>
+                            <tbody id="coordConsultaTableBody" class="divide-y divide-slate-100 text-sm">
+                                <!-- Inyectado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN C: Porcentajes de Asistencias e Inasistencias -->
+            <div id="coordSecEstadisticas" class="coord-section space-y-6 hidden">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl font-bold">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold uppercase">Asistencia Global Campus</p>
+                            <h4 id="statAsistenciaGlobal" class="text-3xl font-extrabold text-slate-900 mt-1">87.5%</h4>
+                            <span class="text-xs text-emerald-600 font-medium"><i class="fa-solid fa-arrow-trend-up mr-1"></i>+1.2% este mes</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center text-2xl font-bold">
+                            <i class="fa-solid fa-user-xmark"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold uppercase">Inasistencia General</p>
+                            <h4 id="statInasistenciaGlobal" class="text-3xl font-extrabold text-slate-900 mt-1">12.5%</h4>
+                            <span class="text-xs text-rose-600 font-medium"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Justificadas: 8.2%</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 flex items-center space-x-4">
+                        <div class="w-16 h-16 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl font-bold">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div>
+                            <p class="text-xs text-slate-500 font-semibold uppercase">Total Alumnos Base</p>
+                            <h4 id="statTotalAlumnos" class="text-3xl font-extrabold text-slate-900 mt-1">25</h4>
+                            <span class="text-xs text-blue-600 font-medium">Ing. en Sistemas / Licenciaturas</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-6">
+                    <h3 class="font-bold text-slate-900 text-lg">Porcentaje de Asistencias e Inasistencias por Alumno</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-200">
+                                    <th class="p-3">Matrícula</th>
+                                    <th class="p-3">Alumno</th>
+                                    <th class="p-3">Asistencias</th>
+                                    <th class="p-3">Faltas</th>
+                                    <th class="p-3">% Asistencia</th>
+                                    <th class="p-3">% Faltas</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tablaPorcentajesAlumnos" class="divide-y divide-slate-100 text-sm">
+                                <!-- Generado por JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN D: Generar Reportes y Formato UIN Oficial -->
+            <div id="coordSecReportes" class="coord-section space-y-6 hidden">
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 space-y-6">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-lg">Reporte Oficial Académico (Formato UIN)</h3>
+                            <p class="text-xs text-slate-500">Selecciona el alumno y los datos para generar e imprimir el reporte oficial PDF.</p>
+                        </div>
+                        <div class="flex items-center space-x-3">
+                            <button type="button" onclick="downloadOfficialReportPDF()" class="bg-blue-700 hover:bg-blue-800 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition shadow flex items-center space-x-2 cursor-pointer">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                <span>Descargar / Imprimir PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Controles de personalización -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Seleccionar Alumno</label>
+                            <select id="reportSelectAlumno" onchange="updateOfficialReportContent()" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600">
+                                <!-- Rellenado por JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Rango de Días / Fechas</label>
+                            <input type="text" id="reportFechas" value="del 22 al 24 de Octubre" oninput="updateOfficialReportContent()" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Motivo del Justificante</label>
+                            <input type="text" id="reportMotivoText" value="debido a una cita médica especializada y reposo indicado por especialista." oninput="updateOfficialReportContent()" class="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600">
+                        </div>
+                    </div>
+
+                    <!-- Plantilla del Reporte Oficial UIN (Lista para PDF / Impresión) -->
+                    <div id="printableReport" class="bg-white border-2 border-slate-300 p-8 rounded-2xl max-w-2xl mx-auto space-y-6 shadow-md font-sans">
+                        <div class="flex items-center justify-between border-b-2 border-blue-900 pb-4">
+                            <div class="text-blue-700 font-extrabold text-2xl tracking-tighter flex items-center gap-2">
+                                <span>UIN</span>
+                                <span class="text-xs font-semibold text-slate-600 border-l pl-2 leading-tight">UNIVERSIDAD<br>INSURGENTES</span>
+                            </div>
+                            <div class="text-right text-xs text-slate-500">
+                                <p class="font-bold text-slate-700">Plantel Ecatepec</p>
+                                <p>Coordinación Académica</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4 text-sm text-slate-800 leading-relaxed pt-2">
+                            <p class="font-bold text-slate-900 text-base">Buenos días, Maestros.</p>
+                            <p>Favor de justificar los días <span id="repOutFechas" class="font-bold text-blue-900 underline">del 22 al 24 de Octubre</span> de la alumna/alumno <span id="repOutNombre" class="font-bold text-blue-900">AGUILAR MUÑIZ ALAN</span> con matrícula <span id="repOutMatricula" class="font-bold text-blue-900">1135777</span>, no se había presentado a clase <span id="repOutMotivo" class="text-slate-700">debido a una cita médica especializada y reposo indicado por especialista</span> y no era posible asistir a plantel.</p>
+                            <p class="pt-2">Agradezco su apoyo al alumno(a).</p>
+                        </div>
+
+                        <div class="pt-8 border-t border-slate-200 flex justify-between items-end">
+                            <div>
+                                <p class="font-bold text-slate-900 text-sm">Deyanira Melchor Granados</p>
+                                <p class="text-xs text-slate-600">Coordinación de Psicología, Pedagogía<br>e Ingeniería en Sistemas Computacionales</p>
+                            </div>
+                            <div class="text-xs text-slate-400 font-mono">
+                                Folio Oficial: UIN-ECO-2026-001
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= 4. INTERFAZ DIRECTIVOS ================= -->
+        <div id="directivosScreen" class="flex-grow hidden max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+            <div class="bg-gradient-to-r from-slate-900 to-blue-950 rounded-3xl p-6 text-white shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <span class="bg-blue-600/40 text-blue-200 text-xs px-3 py-1 rounded-full font-medium">Panel Directivo</span>
+                    <h2 class="text-2xl font-bold mt-2">Supervisión y Control Institucional</h2>
+                    <p class="text-slate-300 text-sm mt-1">Indicadores globales, estadísticas de asistencia y reportes ejecutivos del Campus Ecatepec.</p>
+                </div>
+                <button onclick="showModal('Reportes Directivos', 'Exportando reporte ejecutivo global en PDF para autoridades del plantel...', 'success')" class="bg-white text-slate-900 hover:bg-slate-100 font-bold px-5 py-3 rounded-2xl text-sm transition shadow-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-download text-blue-700"></i>
+                    <span>Exportar Reporte Ejecutivo</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                    <p class="text-xs text-slate-500 font-semibold uppercase">Total Alumnos Matriculados</p>
+                    <h4 class="text-3xl font-extrabold text-slate-900 mt-2">25</h4>
+                    <p class="text-xs text-blue-600 mt-1 font-medium">Base de datos oficial integrada</p>
+                </div>
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                    <p class="text-xs text-slate-500 font-semibold uppercase">Justificantes Aprobados</p>
+                    <h4 id="dirJustificantesCount" class="text-3xl font-extrabold text-slate-900 mt-2">3</h4>
+                    <p class="text-xs text-emerald-600 mt-1 font-medium">Validación institucional activa</p>
+                </div>
+                <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200">
+                    <p class="text-xs text-slate-500 font-semibold uppercase">Estatus del Plantel</p>
+                    <h4 class="text-3xl font-extrabold text-emerald-600 mt-2">Óptimo</h4>
+                    <p class="text-xs text-slate-500 mt-1 font-medium">Sin incidencias mayores reportadas</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL NUEVO JUSTIFICANTE ALUMNO -->
+    <div id="newJustificationModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-lg w-full shadow-2xl border border-slate-100 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3">
+                <h3 class="font-bold text-slate-900 text-lg">Solicitar Nuevo Justificante</h3>
+                <button onclick="closeNewJustificationModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            </div>
+            <form onsubmit="handleStudentSubmitJustification(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Materia</label>
+                    <input type="text" id="studentMateria" required placeholder="Ej. Arquitectura de Computadoras" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Fecha de Falta</label>
+                    <input type="date" id="studentFecha" required class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Motivo de Inasistencia</label>
+                    <select id="studentMotivo" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm focus:ring-2 focus:ring-blue-600">
+                        <option value="Enfermedad con receta médica">Enfermedad con receta médica</option>
+                        <option value="Cuestión familiar urgente">Cuestión familiar urgente</option>
+                        <option value="Problemas de transporte / Fuerza mayor">Problemas de transporte / Fuerza mayor</option>
+                        <option value="Trámite oficial">Trámite oficial</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase mb-1">Comprobante (Opcional)</label>
+                    <input type="file" id="studentArchivo" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                </div>
+                <div class="flex justify-end space-x-3 pt-2">
+                    <button type="button" onclick="closeNewJustificationModal()" class="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100">Cancelar</button>
+                    <button type="submit" class="bg-blue-700 hover:bg-blue-800 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow">Enviar Solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE DATOS Y FUNCIONALIDAD -->
+    <script>
+        // BASE DE DATOS DE ALUMNOS
+        const alumnosDB = [
+            { id: "1135777", correo: "alan.aguilar.m@uinenlinea.mx", nombre: "AGUILAR MUÑIZ ALAN", carrera: "Ingeniería en Sistemas" },
+            { id: "1160956", correo: "joel.andrade@uinenlinea.mx", nombre: "ANDRADE ALMEIDA JOEL DARIO", carrera: "Ingeniería en Sistemas" },
+            { id: "1155136", correo: "o.arias@uinenlinea.mx", nombre: "ARIAS TAMAYO OSVALDO GABRIEL", carrera: "Ingeniería en Sistemas" },
+            { id: "1116216", correo: "noe.bustos@uinenlinea.mx", nombre: "BUSTOS ANAYA NOE INDAVANY", carrera: "Ingeniería en Sistemas" },
+            { id: "1131756", correo: "carlos.cf@uinenlinea.mx", nombre: "CASTAÑEDA FLORES CARLOS ALFREDO", carrera: "Ingeniería en Sistemas" },
+            { id: "1132813", correo: "gabriel.cedillo@uinenlinea.mx", nombre: "CEDILLO LEON GABRIEL", carrera: "Ingeniería en Sistemas" },
+            { id: "1131045", correo: "carlos.garcia.martinez@uinenlinea.mx", nombre: "GARCIA MARTINEZ CARLOS DANIEL", carrera: "Ingeniería en Sistemas" },
+            { id: "1140687", correo: "kevin.gomez.g@uinenlinea.mx", nombre: "GOMEZ GUTIERREZ KEVIN KALID", carrera: "Ingeniería en Sistemas" },
+            { id: "1156673", correo: "aleydis.gomez@uinenlinea.mx", nombre: "GOMEZ PEREZ ALEYDIS SHERLIN", carrera: "Ingeniería en Sistemas" },
+            { id: "1132450", correo: "diego.gonzalez.garcia@uinenlinea.mx", nombre: "GONZALEZ GARCIA DIEGO", carrera: "Ingeniería en Sistemas" },
+            { id: "1138668", correo: "victor.gutierrez.j@uinenlinea.mx", nombre: "GUTIERREZ JIMENEZ VICTOR AXEL", carrera: "Ingeniería en Sistemas" },
+            { id: "1150895", correo: "jonnathan.jimenez@uinenlinea.mx", nombre: "JIMENEZ CORTES JONNATHAN IRVIN", carrera: "Ingeniería en Sistemas" },
+            { id: "1149426", correo: "h.maldonado@uinenlinea.mx", nombre: "MALDONADO ALONZO HECTOR SAUL", carrera: "Ingeniería en Sistemas" },
+            { id: "1165586", correo: "alan.mancera@uinenlinea.mx", nombre: "MANCERA CASTRO ALAN YUSSEL", carrera: "Ingeniería en Sistemas" },
+            { id: "1151861", correo: "sofia.mancera@uinenlinea.mx", nombre: "MANCERA LINARES SOFIA", carrera: "Ingeniería en Sistemas" },
+            { id: "1132194", correo: "e.mata@uinenlinea.mx", nombre: "MATA ARREDONDO ERICK ALEJANDRO", carrera: "Ingeniería en Sistemas" },
+            { id: "1166996", correo: "jose.marle@uinenlinea.mx", nombre: "MORALES TAMAYO JOSE MANUEL", carrera: "Ingeniería en Sistemas" },
+            { id: "1161759", correo: "angel.morelos@uinenlinea.mx", nombre: "MORELOS BELLO ANGEL DAVID", carrera: "Ingeniería en Sistemas" },
+            { id: "1159244", correo: "eunice.munguia@uinenlinea.mx", nombre: "MUNGUIA GARCIA EUNICE ZARAIN", carrera: "Ingeniería en Sistemas" },
+            { id: "1155719", correo: "angel.olivares@uinenlinea.mx", nombre: "OLIVARES BERNAL ANGEL CASSIEL", carrera: "Ingeniería en Sistemas" },
+            { id: "1139260", correo: "dorian.palomo@uinenlinea.mx", nombre: "PALOMO CASTRO DORIAN MISAEL", carrera: "Ingeniería en Sistemas" },
+            { id: "1149259", correo: "d.razo@uinenlinea.mx", nombre: "RAZO REYES DIEGO ALEJANDRO", carrera: "Ingeniería en Sistemas" },
+            { id: "1152214", correo: "fernanda.rivera.a@uinenlinea.mx", nombre: "RIVERA ALMARAZ FERNANDA LISETTE", carrera: "Ingeniería en Sistemas" },
+            { id: "1159238", correo: "ricardo.ruiz.l@uinenlinea.mx", nombre: "RUIZ LOZANO RICARDO URIEL", carrera: "Ingeniería en Sistemas" },
+            { id: "001095568", correo: "ixchel.lopez@uinenlinea.mx", nombre: "LÓPEZ CRUZ IXCHEL ADMIN", carrera: "Ingeniería en Sistemas" }
+        ];
+
+        let justificantesData = [
+            { id: 1, matricula: "1135777", nombre: "AGUILAR MUÑIZ ALAN", correo: "alan.aguilar.m@uinenlinea.mx", carrera: "Ingeniería en Sistemas", materia: "Arquitectura de Computadoras", fecha: "2026-10-18", motivo: "Enfermedad con receta médica", comprobante: "receta_medica.pdf", estatus: "Aprobado" },
+            { id: 2, matricula: "1132813", nombre: "CEDILLO LEON GABRIEL", correo: "gabriel.cedillo@uinenlinea.mx", carrera: "Ingeniería en Sistemas", materia: "Redes de Computadoras", fecha: "2026-10-20", motivo: "Cuestión familiar urgente", comprobante: "constancia_familiar.pdf", estatus: "Aprobado" },
+            { id: 3, matricula: "1160956", nombre: "ANDRADE ALMEIDA JOEL DARIO", correo: "joel.andrade@uinenlinea.mx", carrera: "Ingeniería en Sistemas", materia: "Sistemas Operativos", fecha: "2026-10-22", motivo: "Problemas de transporte / Fuerza mayor", comprobante: "justificante_transporte.pdf", estatus: "Pendiente" }
+        ];
+
+        let currentUser = null;
+        let currentRole = null;
+
+        function updateLoginHints() {
+            const role = document.getElementById('loginRole').value;
+            const hint = document.getElementById('loginHint');
+            if (role === 'alumnado') {
+                hint.innerText = "Sugerencia: Ingrese Matrícula de Alumno (Ej. 1135777)";
+            } else if (role === 'coordinacion') {
+                hint.innerText = "Sugerencia: Ingrese usuario de Coordinación (Ej. coord)";
+            } else if (role === 'directivos') {
+                hint.innerText = "Sugerencia: Ingrese usuario Directivo (Ej. dir)";
+            }
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            const role = document.getElementById('loginRole').value;
+            const userVal = document.getElementById('loginUser').value.trim();
+            
+            currentRole = role;
+
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainHeader').classList.remove('hidden');
+
+            if (role === 'alumnado') {
+                const found = alumnosDB.find(a => a.id === userVal || a.correo.toLowerCase() === userVal.toLowerCase());
+                currentUser = found || { id: userVal || "1135777", nombre: "AGUILAR MUÑIZ ALAN", correo: userVal || "alan.aguilar.m@uinenlinea.mx", carrera: "Ingeniería en Sistemas" };
+                
+                document.getElementById('userNameDisplay').innerText = currentUser.nombre;
+                document.getElementById('userRoleBadge').innerText = "Alumnado";
+                document.getElementById('alumnadoScreen').classList.remove('hidden');
+                renderAlumnadoDashboard();
+            } else if (role === 'coordinacion') {
+                currentUser = { nombre: "Coordinación Académica Ecatepec", correo: userVal };
+                document.getElementById('userNameDisplay').innerText = currentUser.nombre;
+                document.getElementById('userRoleBadge').innerText = "Coordinación";
+                document.getElementById('coordinacionScreen').classList.remove('hidden');
+                initCoordSelect();
+                initReportSelect();
+                renderCoordTables();
+            } else if (role === 'directivos') {
+                currentUser = { nombre: "Dirección de Plantel Ecatepec", correo: userVal };
+                document.getElementById('userNameDisplay').innerText = currentUser.nombre;
+                document.getElementById('userRoleBadge').innerText = "Directivos";
+                document.getElementById('directivosScreen').classList.remove('hidden');
+                renderDirectivosDashboard();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            currentRole = null;
+            document.getElementById('mainHeader').classList.add('hidden');
+            document.getElementById('alumnadoScreen').classList.add('hidden');
+            document.getElementById('coordinacionScreen').classList.add('hidden');
+            document.getElementById('directivosScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            document.getElementById('loginUser').value = "";
+            document.getElementById('loginPass').value = "";
+        }
+
+        function switchCoordTab(tab) {
+            document.getElementById('coordSecValidar').classList.add('hidden');
+            document.getElementById('coordSecConsulta').classList.add('hidden');
+            document.getElementById('coordSecEstadisticas').classList.add('hidden');
+            document.getElementById('coordSecReportes').classList.add('hidden');
+
+            document.querySelectorAll('.coord-tab').forEach(b => {
+                b.classList.remove('bg-blue-700', 'text-white', 'shadow-md', 'shadow-blue-700/20');
+                b.classList.add('bg-white', 'text-slate-600');
+            });
+
+            if (tab === 'validar') {
+                document.getElementById('coordSecValidar').classList.remove('hidden');
+                document.getElementById('tabBtnValidar').classList.add('bg-blue-700', 'text-white', 'shadow-md', 'shadow-blue-700/20');
+                document.getElementById('tabBtnValidar').classList.remove('bg-white', 'text-slate-600');
+            } else if (tab === 'consulta') {
+                document.getElementById('coordSecConsulta').classList.remove('hidden');
+                document.getElementById('tabBtnConsulta').classList.add('bg-blue-700', 'text-white', 'shadow-md', 'shadow-blue-700/20');
+                document.getElementById('tabBtnConsulta').classList.remove('bg-white', 'text-slate-600');
+            } else if (tab === 'estadisticas') {
+                document.getElementById('coordSecEstadisticas').classList.remove('hidden');
+                document.getElementById('tabBtnEstadisticas').classList.add('bg-blue-700', 'text-white', 'shadow-md', 'shadow-blue-700/20');
+                document.getElementById('tabBtnEstadisticas').classList.remove('bg-white', 'text-slate-600');
+                renderEstadisticas();
+            } else if (tab === 'reportes') {
+                document.getElementById('coordSecReportes').classList.remove('hidden');
+                document.getElementById('tabBtnReportes').classList.add('bg-blue-700', 'text-white', 'shadow-md', 'shadow-blue-700/20');
+                document.getElementById('tabBtnReportes').classList.remove('bg-white', 'text-slate-600');
+            }
+        }
+
+        function initCoordSelect() {
+            const sel = document.getElementById('coordSelectAlumno');
+            if(!sel) return;
+            sel.innerHTML = '';
+            alumnosDB.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = `${a.id} - ${a.nombre}`;
+                sel.appendChild(opt);
+            });
+        }
+
+        function initReportSelect() {
+            const sel = document.getElementById('reportSelectAlumno');
+            if(!sel) return;
+            sel.innerHTML = '';
+            alumnosDB.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = `${a.id} - ${a.nombre}`;
+                sel.appendChild(opt);
+            });
+            updateOfficialReportContent();
+        }
+
+        function updateOfficialReportContent() {
+            const selectEl = document.getElementById('reportSelectAlumno');
+            if(!selectEl) return;
+            const matId = selectEl.value;
+            const alum = alumnosDB.find(a => a.id === matId) || alumnosDB[0];
+            const fechas = document.getElementById('reportFechas').value;
+            const motivo = document.getElementById('reportMotivoText').value;
+
+            document.getElementById('repOutFechas').innerText = fechas;
+            document.getElementById('repOutNombre').innerText = alum.nombre;
+            document.getElementById('repOutMatricula').innerText = alum.id;
+            document.getElementById('repOutMotivo').innerText = motivo;
+        }
+
+        function downloadOfficialReportPDF() {
+            const report = document.getElementById('printableReport');
+
+            if (!report) {
+                showModal('No se pudo generar el reporte', 'No se encontró la plantilla del Reporte Oficial Académico.', 'info');
+                return;
+            }
+
+            const printWindow = window.open('', '_blank');
+
+            if (!printWindow) {
+                showModal(
+                    'Ventana emergente bloqueada',
+                    'Tu navegador bloqueó la ventana del PDF. Permite las ventanas emergentes para este sitio y vuelve a presionar “Descargar / Imprimir PDF”.',
+                    'info'
+                );
+                return;
+            }
+
+            const reportHTML = report.outerHTML;
+
+            printWindow.document.open();
+            printWindow.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte Oficial Académico UIN</title>
+    <script src="https://cdn.tailwindcss.com"><\/script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #fff; margin: 0; padding: 24px; }
+        #printableReport { margin: 0 auto; width: 100%; max-width: 760px; box-shadow: none !important; }
+        @page { size: auto; margin: 15mm; }
+        @media print {
+            body { padding: 0; }
+            #printableReport { border: 0 !important; border-radius: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+    ${reportHTML}
+    <script>
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                window.focus();
+                window.print();
+            }, 900);
+        });
+    <\/script>
+</body>
+</html>`);
+            printWindow.document.close();
+        }
+
+        function renderAlumnadoDashboard() {
+            const tbody = document.getElementById('alumnoTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            const misJustificantes = justificantesData.filter(j => j.matricula === currentUser.id);
+            document.getElementById('alumnoNameHeader').innerText = currentUser.nombre;
+            document.getElementById('alumnoCount').innerText = `${misJustificantes.length} Registros`;
+
+            if (misJustificantes.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">No tienes justificantes registrados actualmente.</td></tr>`;
+                return;
+            }
+
+            misJustificantes.forEach(j => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-4 font-medium text-slate-900">#${j.id}<br><span class="text-xs text-slate-400">${j.fecha}</span></td>
+                    <td class="p-4">${j.materia}</td>
+                    <td class="p-4">${j.motivo}</td>
+                    <td class="p-4"><span class="text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-lg">${j.comprobante}</span></td>
+                    <td class="p-4 text-center">
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${j.estatus === 'Aprobado' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                            ${j.estatus}
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderCoordTables() {
+            const tbodyVal = document.getElementById('coordValidarTableBody');
+            if(tbodyVal) {
+                tbodyVal.innerHTML = '';
+                const pendientes = justificantesData.filter(j => j.estatus === 'Pendiente');
+                document.getElementById('pendingCountBadge').innerText = `${pendientes.length} Pendientes`;
+
+                if (pendientes.length === 0) {
+                    tbodyVal.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">No hay solicitudes pendientes de aprobación.</td></tr>`;
+                } else {
+                    pendientes.forEach(j => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="p-3 font-medium text-slate-900">${j.matricula}<br><span class="text-xs text-slate-500">${j.nombre}</span></td>
+                            <td class="p-3">${j.materia}<br><span class="text-xs text-slate-400">${j.fecha}</span></td>
+                            <td class="p-3 text-xs">${j.motivo}</td>
+                            <td class="p-3 text-center space-x-2">
+                                <button onclick="aprobarJustificante(${j.id})" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow">Aprobar</button>
+                                <button onclick="rechazarJustificante(${j.id})" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold shadow">Rechazar</button>
+                            </td>
+                        `;
+                        tbodyVal.appendChild(tr);
+                    });
+                }
+            }
+
+            const tbodyCons = document.getElementById('coordConsultaTableBody');
+            if(tbodyCons) {
+                tbodyCons.innerHTML = '';
+                justificantesData.forEach(j => {
+                    const alumObj = alumnosDB.find(a => a.id === j.matricula) || { correo: j.correo || "s/n" };
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-4 font-mono text-xs font-bold text-slate-700">${j.matricula}</td>
+                        <td class="p-4 font-semibold text-slate-900">${j.nombre}</td>
+                        <td class="p-4 text-xs text-slate-500">${alumObj.correo}</td>
+                        <td class="p-4">${j.materia}</td>
+                        <td class="p-4 text-xs">${j.motivo}</td>
+                        <td class="p-4 text-center">
+                            <span class="px-3 py-1 rounded-full text-xs font-bold ${j.estatus === 'Aprobado' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                                ${j.estatus}
+                            </span>
+                        </td>
+                    `;
+                    tbodyCons.appendChild(tr);
+                });
+            }
+        }
+
+        function renderEstadisticas() {
+            document.getElementById('statTotalAlumnos').innerText = alumnosDB.length;
+            const tbody = document.getElementById('tablaPorcentajesAlumnos');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+            
+            alumnosDB.forEach((a) => {
+                const tieneJustificante = justificantesData.some(j => j.matricula === a.id && j.estatus === 'Aprobado');
+                const asistencias = tieneJustificante ? 18 : 20;
+                const faltas = tieneJustificante ? 2 : 0;
+                const pctAsis = ((asistencias / 20) * 100).toFixed(0) + '%';
+                const pctFaltas = ((faltas / 20) * 100).toFixed(0) + '%';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-3 font-mono text-xs font-bold">${a.id}</td>
+                    <td class="p-3 font-semibold text-slate-900">${a.nombre}</td>
+                    <td class="p-3">${asistencias}</td>
+                    <td class="p-3">${faltas}</td>
+                    <td class="p-3 font-bold text-emerald-600">${pctAsis}</td>
+                    <td class="p-3 font-bold text-slate-600">${pctFaltas}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function aprobarJustificante(id) {
+            const j = justificantesData.find(item => item.id === id);
+            if(j) j.estatus = 'Aprobado';
+            renderCoordTables();
+            showModal('Aprobación Exitosa', 'El justificante ha sido aprobado formalmente en el sistema de la UIN Ecatepec.', 'success');
+        }
+
+        function rechazarJustificante(id) {
+            const j = justificantesData.find(item => item.id === id);
+            if(j) j.estatus = 'Rechazado';
+            renderCoordTables();
+            showModal('Solicitud Rechazada', 'El justificante fue rechazado por la coordinación.', 'info');
+        }
+
+        function handleCoordManualRegister(event) {
+            event.preventDefault();
+            const matId = document.getElementById('coordSelectAlumno').value;
+            const alum = alumnosDB.find(a => a.id === matId);
+            const materia = document.getElementById('coordMateria').value;
+            const fecha = document.getElementById('coordFechas').value;
+            const motivo = document.getElementById('coordMotivo').value;
+
+            const nuevo = {
+                id: justificantesData.length + 1,
+                matricula: alum.id,
+                nombre: alum.nombre,
+                correo: alum.correo,
+                carrera: alum.carrera,
+                materia: materia,
+                fecha: fecha,
+                motivo: motivo,
+                comprobante: "registro_coordinacion.pdf",
+                estatus: "Aprobado"
+            };
+
+            justificantesData.push(nuevo);
+            renderCoordTables();
+            showModal('Registro Exitoso', `Se registró y aprobó el justificante para el alumno ${alum.nombre}.`, 'success');
+            event.target.reset();
+        }
+
+        function renderDirectivosDashboard() {
+            document.getElementById('dirJustificantesCount').innerText = justificantesData.filter(j => j.estatus === 'Aprobado').length;
+        }
+
+        function filterConsultaTable() {
+            const query = document.getElementById('searchAlumnoInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#coordConsultaTableBody tr');
+            rows.forEach(row => {
+                const text = row.innerText.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        function openNewJustificationModal() {
+            document.getElementById('newJustificationModal').classList.remove('hidden');
+        }
+        function closeNewJustificationModal() {
+            document.getElementById('newJustificationModal').classList.add('hidden');
+        }
+
+        function handleStudentSubmitJustification(event) {
+            event.preventDefault();
+            const materia = document.getElementById('studentMateria').value;
+            const fecha = document.getElementById('studentFecha').value;
+            const motivo = document.getElementById('studentMotivo').value;
+
+            const nuevo = {
+                id: justificantesData.length + 1,
+                matricula: currentUser.id,
+                nombre: currentUser.nombre,
+                correo: currentUser.correo,
+                carrera: currentUser.carrera || "Ingeniería en Sistemas",
+                materia: materia,
+                fecha: fecha,
+                motivo: motivo,
+                comprobante: "documento_alumno.pdf",
+                estatus: "Pendiente"
+            };
+
+            justificantesData.push(nuevo);
+            closeNewJustificationModal();
+            renderAlumnadoDashboard();
+            showModal('Solicitud Enviada', 'Tu solicitud de justificante ha sido enviada a coordinación para su revisión.', 'success');
+            event.target.reset();
+        }
+
+        function showModal(title, message, type = 'success') {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            const iconDiv = document.getElementById('modalIcon');
+            if (type === 'success') {
+                iconDiv.className = "w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold";
+                iconDiv.innerHTML = '<i class="fa-solid fa-check"></i>';
+            } else {
+                iconDiv.className = "w-12 h-12 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-xl font-bold";
+                iconDiv.innerHTML = '<i class="fa-solid fa-info"></i>';
+            }
+            const modal = document.getElementById('customModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('modalContainer').classList.remove('scale-95', 'opacity-0');
+                document.getElementById('modalContainer').classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalContainer').classList.remove('scale-100', 'opacity-100');
+            document.getElementById('modalContainer').classList.add('scale-95', 'opacity-0');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        }
+    </script>
+</body>
+</html>
